@@ -2,6 +2,8 @@
 ##Step 1: Disable Swap
 Run the following command to disable swap:
 
+
+### Step 1: disable swap
 ```bash
 ```sh
 $ sudo swapoff -a
