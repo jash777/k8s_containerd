@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Installing Kubernetes using kubeadm: A Step-by-Step Guide</title>
+  <style>
+    .code-container {
+      position: relative;
+      display: inline-block;
+      max-width: 100%;
+      overflow: auto;
+      background-color: #f4f4f4;
+      padding: 1.2%;
+      border-radius: 5px;
+      margin-bottom: 10px;
+    }
+
+    .code-container pre {
+      margin: 0;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+
+    .copy-button {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      padding: 5px;
+      font-size: 12px;
+      cursor: pointer;
+      color: #333;
+    }
+
+
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f9f9f9;
+      margin: 0;
+      padding: 20px;
+    }
+
+    h1 {
+      color: #333;
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .blog-post {
+      background-color: #fff;
+      border-radius: 5px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      padding: 20px;
+      margin-bottom: 30px;
+    }
+
+    .blog-post h2 {
+      color: #333;
+      font-size: 24px;
+      margin-bottom: 10px;
+    }
+
+
+    .text-center {
+      text-align: center;
+    }
+
+    .text-justify {
+      text-align: justify;
+    }
+
+    .fade-in {
+      animation: fadeIn 1s;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+
+    .blog-post {
+  background-color: #f5f5f5;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.blog-post-title {
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.blog-post-date {
+  font-size: 14px;
+  color: #777;
+  margin-bottom: 20px;
+}
+
+.blog-post-content {
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+pre {
+  background-color: #f9f9f9;
+  padding: 10px;
+  border-radius: 4px;
+  overflow: auto;
+}
+
+
+  </style>
+  <script>
+    function copyToClipboard(codeElement) {
+      const range = document.createRange();
+      range.selectNode(codeElement);
+      window.getSelection().removeAllRanges();
+      window.getSelection().addRange(range);
+      document.execCommand('copy');
+      window.getSelection().removeAllRanges();
+
+      const copyButton = codeElement.parentNode.querySelector('.copy-button');
+      copyButton.innerText = 'Copied';
+    }
+  </script>
+</head>
+<body>
+    <div class="blog-post">
+  <h1 class="blog-post-title">Installing Kubernetes using kubeadm: A Step-by-Step Guide</h1>
+  <img src="https://kubernetes.io/images/kubernetes-horizontal-color.png" alt="Kubernetes Installation Banner">
+
+  <h2>Step 1: Disable Swap</h2>
+  <p class="blog-post-content">
+
+    This command disables the swap memory on your system. Swap is a space on the hard drive that is used as virtual memory when the RAM (Random Access Memory) is full. By disabling swap, you ensure that Kubernetes operates optimally without using swap space.
+
+  </p>
+  <div class="code-container">
+    <pre><code>sudo swapoff -a</code></pre>
+    <span class="copy-button" onclick="copyToClipboard(this.parentNode.querySelector('code'))">Copy</span>
+  </div>
+
+  <h2 class="blog-post-title">Step 2: Update /etc/fstab</h2>
+  <p class="blog-post-content">
+    This command updates the /etc/fstab file, which contains information about the filesystems and partitions on your system. In this step, we comment out the swap entry in the file to prevent swap from being enabled on system startup.
+  </p>
+  <div class="code-container">
+    <pre>
+        <code>
+    sudo sed -i '/\sswap\s/s/^/#/' /etc/fstab
+        </code>
+      </pre>
+      <span class="copy-button" onclick="copyToClipboard(this.parentNode.querySelector('code'))">Copy</span>
+  </div>
+
+
+  <h2 class="blog-post-title">Step 3: Update /etc/hosts</h2>
+  <p class="blog-post-content">
+    In this step, we update the /etc/hosts file, which is used to map hostnames to IP addresses. Here, we add an IP address and hostname entry to the file. This is important for communication between the different nodes in the Kubernetes cluster.
+  </p>
+  <div class="code-container">
+  <pre>
+    <code>
+sudo sed -i '/&lt;IP_address&gt;/d; $a\&lt;IP_address&gt;\t&lt;hostname&gt;' /etc/hosts
+    </code>
+  </pre>
+  <span class="copy-button" onclick="copyToClipboard(this.parentNode.querySelector('code'))">Copy</span>
+</div>
+
+
+<h2 class="blog-post-title">Step 4: Enable Bridged Traffic in IPTABLES</h2>
+<p class="blog-post-content">
+    To enable bridged traffic in IPTABLES, we need to add the necessary modules and configurations. This step ensures that network traffic can flow smoothly between different containers and pods in the Kubernetes cluster.
+</p>
+<div class="code-container">
+
+  <pre>
+    <code>
+echo -e "overlay\nbr_netfilter" | sudo tee /etc/modules-load.d/containerd.conf &gt;/dev/null &amp;&amp; cat /etc/modules-load.d/containerd.conf
+sudo modprobe overlay
+sudo modprobe br_netfilter
+echo -e "net.bridge.bridge-nf-call-iptables  = 1\nnet.bridge.bridge-nf-call-ip6tables = 1\nnet.ipv4.ip_forward= 1" | sudo tee /etc/sysctl.d/k8s.conf &gt;/dev/null &amp;&amp; cat /etc/sysctl.d/k8s.conf
+    </code>
+  </pre>
+  <span class="copy-button" onclick="copyToClipboard(this.parentNode.querySelector('code'))">Copy</span>
+</div>
+
+  <h2 class="blog-post-title">Step 5: Install Container Runtime (containerd)</h2>
+  <p class="blog-post-content">
+    Here, we install the container runtime called containerd. Containerd is responsible for managing the lifecycle of containers in Kubernetes. It provides a reliable and efficient way to run containers on your system.
+  </p>
+  <div class="code-container">
+
+  <pre>
+    <code>
+wget https://github.com/containerd/containerd/releases/download/v1.6.16/containerd-1.6.16-linux-amd64.tar.gz -P /tmp/
+tar Cxzvf /usr/local /tmp/containerd-1.6.16-linux-amd64.tar.gz
+wget https://raw.githubusercontent.com/containerd/containerd/main/containerd.service -P /etc/systemd/system/
+systemctl daemon-reload
+systemctl enable --now containerd
+    </code>
+  </pre>
+  <span class="copy-button" onclick="copyToClipboard(this.parentNode.querySelector('code'))">Copy</span>
+</div>
+
+
+
+  <h2 class="blog-post-title">Step 6: Installing runc for (containerd)</h2>
+  <p class="blog-post-content">
+    In this step, we download the runc binary, which is a lightweight, portable container runtime, and install it on the system. The wget command downloads the binary file, and the install command installs it with the appropriate permissions.
+  </p>
+  <div class="code-container">
+  <pre>
+    <code>
+wget https://github.com/opencontainers/runc/releases/download/v1.1.4/runc.amd64 -P /tmp/
+install -m 755 /tmp/runc.amd64 /usr/local/sbin/runc
+    </code>
+  </pre>
+  <span class="copy-button" onclick="copyToClipboard(this.parentNode.querySelector('code'))">Copy</span>
+
+</div>
+  <h2 class="blog-post-title">Step 7: Installing cni plugin</h2>
+  <p class="blog-post-content">
+    This step involves installing the CNI (Container Network Interface) plugins. CNI plugins are responsible for providing networking support to containers. We download the CNI plugins archive using wget, create the necessary directory structure with mkdir -p, and extract the contents of the archive into the /opt/cni/bin directory using tar.
+  </p>
+  <div class="code-container">
+  <pre>
+    <code>
+wget https://github.com/containernetworking/plugins/releases/download/v1.2.0/cni-plugins-linux-amd64-v1.2.0.tgz -P /tmp/
+mkdir -p /
+</code>
+</pre>
+<span class="copy-button" onclick="copyToClipboard(this.parentNode.querySelector('code'))">Copy</span>
+</div>
+
+<h2 class="blog-post-title">Step 8: Configuring containerd</h2>
+<p class="blog-post-content">
+    Here, we create a directory to store the configuration for the containerd runtime. The containerd config default command generates the default configuration, and tee is used to save it to the /etc/containerd/config.toml file. You need to manually edit the config.toml file and change the systemdCgroup setting to true for proper container management. Finally, we restart the containerd service using systemctl.
+
+</p>
+<div class="code-container">
+    <pre>
+      <code>
+        mkdir -p /etc/containerd
+        containerd config default | tee /etc/containerd/config.toml   <<<<<<<<<<<<<< manually edit and change systemdCgroup to true
+        systemctl restart containerd        
+  </code>
+  </pre>
+  <span class="copy-button" onclick="copyToClipboard(this.parentNode.querySelector('code'))">Copy</span>
+  </div>
+
+  <h2 class="blog-post-title">Step 9: Installing Kubernetes components (kubectl, kubeadm, kubelet)</h2>
+  <p class="blog-post-content">
+    In this step, we prepare the system for Kubernetes installation. We update the package list using apt-get update and install the necessary dependencies. Then, we download the GPG key for the Kubernetes repository and add it to the keyring. Next, we add the Kubernetes repository to the package sources by creating a kubernetes.list file. After another update, we install specific versions of kubelet, kubeadm, and kubectl. Finally, we use apt-mark to hold these packages at their current versions to prevent automatic upgrades.
+
+  </p>
+  <div class="code-container">
+    <pre>
+      <code>
+        apt-get update
+        apt-get install -y apt-transport-https ca-certificates curl
+        curl -fsSLo /etc/apt/keyrings/kubernetes-archive-keyring.gpg https://packages.cloud.google.com/apt/doc/apt-key.gpg
+        echo "deb [signed-by=/etc/apt/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main" | tee /etc/apt/sources.list.d/kubernetes.list
+        apt-get update
+        sudo -s
+        apt-get install -y kubelet=1.26.1-00 kubeadm=1.26.1-00 kubectl=1.26.1-00
+        apt-mark hold kubelet kubeadm kubectl               
+  </code>
+  </pre>
+  <span class="copy-button" onclick="copyToClipboard(this.parentNode.querySelector('code'))">Copy</span>
+  </div>
+
+  <h2 class="blog-post-title">Creating the control plane on the master node</h2>
+  <div class="code-container">
+    <pre>
+      <code>
+        kubeadm init --pod-network-cidr 10.10.0.0/16 --kubernetes-version 1.              
+  </code>
+  </pre>
+  <span class="copy-button" onclick="copyToClipboard(this.parentNode.querySelector('code'))">Copy</span>
+  </div>
+</div>
+</body>
+</html>
